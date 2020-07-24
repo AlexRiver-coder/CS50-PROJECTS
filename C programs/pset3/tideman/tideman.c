@@ -11,6 +11,7 @@ int preferences[MAX][MAX];
 // locked[i][j] means i is locked in over j
 bool locked[MAX][MAX];
 
+
 // Each pair has a winner, loser
 typedef struct
 {
@@ -102,7 +103,7 @@ int main(int argc, string argv[])
 // Update ranks given a new vote
 bool vote(int rank, string name, int ranks[])
 {
-   for (int i = 0; i < candidate_count; i++)
+    for (int i = 0; i < candidate_count; i++)
     {
         if (strcmp(candidates[i], name) == 0)
         {
@@ -151,32 +152,148 @@ void add_pairs(void)
     }
 }
 
-
+// Useful vars to sort
+int temp1 = 0;
+int temp2 = 0;
+int preference_temp = 0;
+pair pairtemp [MAX * (MAX - 1) / 2];
 
 // Sort pairs in decreasing order by strength of victory
 
 void sort_pairs(void)
-{
+{  
+    int d = 0;
     
-    
-    return;
+    for (int i = 0; i < pair_count * pair_count; i++)
+    {
+        temp1 = pairs[d].winner;
+        temp2 = pairs[d].loser;
+        preference_temp = preferences[temp1][temp2];
+        
+        if (preference_temp < preferences[pairs[d + 1].winner][pairs[d + 1].loser])
+        {
+            pairtemp[d] = pairs[d];
+            pairs[d] = pairs[d + 1];
+            pairs[d + 1] = pairtemp[d];
+        }
+       
+        if (d < pair_count - 1)
+        {
+            d++;
+        }
+        if (d == pair_count - 1)
+        {
+            d = 0;
+        }
+    }
 }
 
+// variable to skip pairs
+
+bool pair_skip[MAX];
+
+// loop to check if there's a cycle
+
+void iscycle(int index)
+{
+// Main loop
+
+    for (int i = index; i < pair_count; i++)
+    {
+// Checks if the winner of this pair has lost to someone
+
+        if (pairs[i].loser == pairs[index].winner)
+        {
+// Checks if the one who lost is not the strongest pair
+
+            if (index != pairs[0].winner)
+            {
+// Checks to see if the loser of the main pair has not won the winner
+
+                if (pairs[i].winner != pairs[index].loser)
+                {
+// Second loop
+
+                    for (int j = 0; j < pair_count; j++)
+                    {
+// Checks to see if the guy who lost in the main pair, has not won against some other candidate
+
+                        if (pairs[index].loser == pairs[j].winner)
+                        {
+// third loop
+
+                            for (int f = 0; f < pair_count; f++)
+                            {
+// Checks to see if the guy who lost to the guy who lost in the main pair has not won agains some other candidate
+
+                                if (pairs[j].loser == pairs[f].winner)
+                                {
+// Checks to see if the winner of the main pair has not lost to someone whom the loser of his pair has won against
+
+                                    if (pairs[f].loser == pairs[index].winner)
+                                    {
+                                        pair_skip[i] = true;
+                                    }
+                                }
+                                
+                            }
+                            
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 
 // Lock pairs into the candidate graph in order, without creating cycles
+
 void lock_pairs(void)
 {
-    
-    
-    
+    for (int i = 0; i < pair_count; i ++)
+    {
+        if (!pair_skip[i])
+        {
+            locked[pairs[i].winner][pairs[i].loser] = true;
+            iscycle(i);
+        }
+    }
 }
+
+
 
 // Print the winner of the election
 
 void print_winner(void)
 {
+    int temp3;
     
-    return;
+// Loop to look if any candidate has not a edge pointing towards him 
+
+    for (int i = 0; i < candidate_count; i++)
+    {
+        temp3 = 0;
+
+        for (int j = 0; j < candidate_count; j++)
+        {
+            if (locked[j][i] == false)
+            {
+                temp3++;
+            }
+        } 
+        
+// If the candidate is found, prints the name ( include draws )
+
+        if (temp3 == candidate_count)
+        {
+            printf("%s\n", candidates[i]);  
+        }
+        
+    }
 }
+
+
+
+
 
